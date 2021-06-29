@@ -1,0 +1,5 @@
+package goPoolUsage
+
+func main() {
+
+}
