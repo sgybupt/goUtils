@@ -155,3 +155,11 @@ func MakeDirsP(dir string) error {
 	}
 	return nil
 }
+
+func UploadFile(localFp string, aimPath string) error {
+	file, err := os.Open(localFp)
+	if err != nil {
+		return err
+	}
+	return GetFTPConn().Stor(aimPath, file)
+}
