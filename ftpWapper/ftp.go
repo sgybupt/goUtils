@@ -3,10 +3,10 @@ package ftpWapper
 import (
 	"fmt"
 	"github.com/jlaffaye/ftp"
+	"github.com/sgybupt/goUtils/fastFixer"
 	"log"
 	"os"
 	"path"
-	"sync/atomic"
 	"time"
 )
 
@@ -65,16 +65,26 @@ func GetFTPConn() (c *ftp.ServerConn) {
 	if ftpConn != nil {
 		err = ftpConn.NoOp()
 	}
-	if ftpConn == nil || err != nil || atomic.LoadInt64(&reconOnceFlag) == 1 {
-		if atomic.CompareAndSwapInt64(&reconOnceFlag, 0, 1) {
+
+	bad := ftpConn == nil || err != nil
+	fastFixer.Do(bad,
+		func() {
+			fmt.Println("do something")
+		}, func() {
+			fmt.Println("connecting")
 			newFTPConn(Addr, Timeout)
-			atomic.StoreInt64(&reconOnceFlag, 0)
-			close(reconBoardcastChan)
-			reconBoardcastChan = make(chan bool)
-		} else {
-			<-reconBoardcastChan
-		}
-	}
+			fmt.Println("connected")
+		})
+
+	//if ftpConn == nil || err != nil || atomic.LoadInt64(&reconOnceFlag) == 1 {
+	//	if atomic.CompareAndSwapInt64(&reconOnceFlag, 0, 1) {
+	//		atomic.StoreInt64(&reconOnceFlag, 0)
+	//		close(reconBoardcastChan)
+	//		reconBoardcastChan = make(chan bool)
+	//	} else {
+	//		<-reconBoardcastChan
+	//	}
+	//}
 	return ftpConn
 }
 

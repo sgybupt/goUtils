@@ -4,6 +4,7 @@
 package fastFixer
 
 import (
+	"fmt"
 	"sync/atomic"
 )
 
@@ -33,8 +34,8 @@ func init() {
 //	do()
 //}
 
-func Do(good bool, do func(), fixer func()) {
-	if !good || atomic.LoadInt64(&fixingFlag) == 1 {
+func Do(bad bool, do func(), fixer func()) {
+	if bad || atomic.LoadInt64(&fixingFlag) == 1 {
 		if atomic.CompareAndSwapInt64(&fixingFlag, 0, 1) {
 			fixer()
 			do()
@@ -43,7 +44,9 @@ func Do(good bool, do func(), fixer func()) {
 			boardcastChan = make(chan bool)
 			return // 此处  fixer结束以后 就立刻do 然后在清理之前 return. 防止经过make chan等操作以后 在底下的do()之前 又需要fix
 		} else {
+			fmt.Println("in")
 			<-boardcastChan
+			fmt.Println("out")
 		}
 	}
 	do()
