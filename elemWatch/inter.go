@@ -1,4 +1,4 @@
-package fileWatch
+package elemWatch
 
 type InFileInfoInter interface {
 	GetToken() string

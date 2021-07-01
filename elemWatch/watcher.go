@@ -1,4 +1,4 @@
-package fileWatch
+package elemWatch
 
 import (
 	"fmt"
