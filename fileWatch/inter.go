@@ -1,44 +1,44 @@
 package fileWatch
 
 type InFileInfoInter interface {
-	GetFullPath() string
+	GetToken() string
 }
 
 type OutFileInfoInter interface {
 	InFileInfoInter
-	GetSize() int64
+	GetChange() interface{}
 }
 
-type FileInfo struct {
-	path string
+type ElemInfo struct {
+	token string
 }
 
-func NewFileInfo(p string) FileInfo {
-	return FileInfo{
-		path: p,
+func NewElemInfo(p string) ElemInfo {
+	return ElemInfo{
+		token: p,
 	}
 }
 
-func NewOutFileInfo(p string, s int64) OutFileInfo {
-	return OutFileInfo{
-		path: p,
-		size: s,
+func NewOutElemInfo(p string, s interface{}) OutElemInfo {
+	return OutElemInfo{
+		path:        p,
+		changeInter: s,
 	}
 }
 
-func (f FileInfo) GetFullPath() string {
+func (f ElemInfo) GetToken() string {
+	return f.token
+}
+
+type OutElemInfo struct {
+	path        string
+	changeInter interface{}
+}
+
+func (f OutElemInfo) GetToken() string {
 	return f.path
 }
 
-type OutFileInfo struct {
-	path string
-	size int64
-}
-
-func (f OutFileInfo) GetFullPath() string {
-	return f.path
-}
-
-func (f OutFileInfo) GetSize() int64 {
-	return f.size
+func (f OutElemInfo) GetChange() interface{} {
+	return f.changeInter
 }

@@ -33,18 +33,6 @@ func NewFileWatcher(loopTime, tolerateTIme time.Duration) *FileFilter {
 	}
 }
 
-//func (ff *FileFilter) SetInputChan(i <-chan InFileInfoInter) {
-//	ff.i = i
-//}
-//
-//func (ff *FileFilter) SetOutChangeChan(o chan<- OutFileInfoInter) {
-//	ff.oC = o
-//}
-//
-//func (ff *FileFilter) SetOutStableChan(o chan<- OutFileInfoInter) {
-//	ff.oS = o
-//}
-
 // return -1 if file not exist or it is a dir
 func GetFileSize(fp string) int64 {
 	fi, err := os.Stat(fp)
@@ -61,7 +49,8 @@ func GetFileSize(fp string) int64 {
 	return fi.Size()
 }
 
-func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInter) {
+// changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
+func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInter, changeFunc func(token string) int64) {
 	if debug {
 		fmt.Println("watcher running")
 	}
@@ -77,56 +66,51 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 				return
 			}
 			if debug {
-				fmt.Println("input a file", in.GetFullPath())
+				fmt.Println("input an elem", in.GetToken())
 			}
-			timeInter, has := ff.record.LoadOrStore(in.GetFullPath(), time.Now())
+			_, has := ff.record.LoadOrStore(in.GetToken(), time.Now())
 			if has { // this file has been watched
 				if debug {
-					fmt.Println("this file has being watched, pass", in.GetFullPath())
+					fmt.Println("this elem has being watched, pass", in.GetToken())
 				}
 				continue
 			}
 			ff.wg.Add(1)
-			go func(fp string, oldTime time.Time) {
+			go func(token string) {
 				defer ff.wg.Done()
-				defer ff.record.Delete(fp)
-				oldSize := GetFileSize(fp)
-				if debug {
-					fmt.Println(oldSize, fp)
-				}
-				if oldSize < 0 {
-					// not exist or is dir, double check
-					if debug {
-						fmt.Println("this file is something wrong", fp)
-					}
+				defer ff.record.Delete(token)
+				preVersion := changeFunc(token)
+				preTimeInter, ok := ff.record.Load(in.GetToken())
+				if !ok {
 					return
 				}
+				preTime := preTimeInter.(time.Time)
 				for {
-					newSize := GetFileSize(fp)
-					if newSize == oldSize && time.Now().Sub(oldTime) >= ff.tolerateTime {
+					newVersion := changeFunc(token)
+
+					if newVersion == preVersion && time.Now().Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
-								fmt.Println("stable file", fp)
+								fmt.Println("stable elem", token)
 							}
-							ff.oS <- NewOutFileInfo(fp, newSize)
+							ff.oS <- NewOutElemInfo(token, newVersion)
 						}
 						return
-					} else {
-						if newSize != oldSize {
-							if ff.oC != nil {
-								if debug {
-									fmt.Println("file size changed", fp)
-								}
-								ff.oC <- NewOutFileInfo(fp, newSize)
+					}
+					if newVersion != preVersion {
+						if ff.oC != nil {
+							if debug {
+								fmt.Println("elem changed", token)
 							}
-							// refresh
-							oldTime = time.Now()
-							oldSize = newSize
+							ff.oC <- NewOutElemInfo(token, newVersion)
 						}
+						// refresh
+						preVersion = newVersion
+						preTime = time.Now()
 					}
 					time.Sleep(ff.loopTime)
 				}
-			}(in.GetFullPath(), timeInter.(time.Time))
+			}(in.GetToken())
 
 		case _, ok := <-ff.stopChan:
 			if !ok {
