@@ -1,5 +1,0 @@
-package fileChangeFilter
-
-func main() {
-	
-}

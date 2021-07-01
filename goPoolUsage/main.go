@@ -1,5 +1,0 @@
-package goPoolUsage
-
-func main() {
-
-}
