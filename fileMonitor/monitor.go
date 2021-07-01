@@ -176,9 +176,11 @@ func (m *Monitor) Run(msgChan chan<- EventInter) {
 					if time.Now().Sub(ev.GetT()) >= m.config.ToleranceTime {
 						msgChan <- ev
 						delete(statusMap, event.Name)
+					} else {
+						statusMap[event.Name].SetT(time.Now())
 					}
 				} else {
-					statusMap[event.Name] = EventWithTimestamp{
+					statusMap[event.Name] = &EventWithTimestamp{
 						Event: event,
 						T:     time.Now(),
 					}

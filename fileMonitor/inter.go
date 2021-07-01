@@ -18,6 +18,7 @@ type EventInter interface {
 	GetName() string
 	GetOp() uint32
 	GetT() time.Time
+	SetT(time.Time)
 }
 
 type EventWithTimestamp struct {
@@ -35,4 +36,8 @@ func (ewt EventWithTimestamp) GetOp() uint32 {
 
 func (ewt EventWithTimestamp) GetT() time.Time {
 	return ewt.T
+}
+
+func (ewt *EventWithTimestamp) SetT(t time.Time) {
+	ewt.T = t
 }

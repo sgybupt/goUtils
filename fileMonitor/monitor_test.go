@@ -8,9 +8,9 @@ import (
 
 func TestFull(t *testing.T) {
 	var monitor Monitor
-	monitor.InitConfig(Config{
+	_ = monitor.InitConfig(Config{
 		TickTime:      time.Millisecond * 50,
-		ToleranceTime: time.Millisecond * 100,
+		ToleranceTime: time.Millisecond * 500,
 		AimDir:        "/Users/su/tempDir",
 		DirLevel:      0, // 初始化的时候 添加的监听等级. 如果在监听文件夹底下继续创建文件夹, 那么无论层级都会加入监听
 	})
@@ -18,8 +18,8 @@ func TestFull(t *testing.T) {
 
 	go monitor.Run(msgChan)
 
-	ticker := time.NewTicker(time.Second * 10)
-	for ; ; {
+	ticker := time.NewTicker(time.Second * 100)
+	for {
 		select {
 		case ev := <-msgChan:
 			fmt.Println(ev)

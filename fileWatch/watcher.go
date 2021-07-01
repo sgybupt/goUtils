@@ -70,7 +70,7 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 	ff.oS = oS
 	ff.oC = oC
 
-	for ; ; {
+	for {
 		select {
 		case in, ok := <-ff.i:
 			if !ok {
@@ -79,55 +79,54 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 			if debug {
 				fmt.Println("input a file", in.GetFullPath())
 			}
-			ff.wg.Add(1)
-			go func() {
-				defer ff.wg.Done()
-				oldSize := GetFileSize(in.GetFullPath())
+			timeInter, has := ff.record.LoadOrStore(in.GetFullPath(), time.Now())
+			if has { // this file has been watched
 				if debug {
-					fmt.Println(oldSize, in.GetFullPath())
+					fmt.Println("this file has being watched, pass", in.GetFullPath())
+				}
+				continue
+			}
+			ff.wg.Add(1)
+			go func(fp string, oldTime time.Time) {
+				defer ff.wg.Done()
+				defer ff.record.Delete(fp)
+				oldSize := GetFileSize(fp)
+				if debug {
+					fmt.Println(oldSize, fp)
 				}
 				if oldSize < 0 {
 					// not exist or is dir, double check
 					if debug {
-						fmt.Println("this file is something wrong", in.GetFullPath())
+						fmt.Println("this file is something wrong", fp)
 					}
 					return
 				}
-				timeInter, has := ff.record.LoadOrStore(in.GetFullPath(), time.Now())
-				if has { // this file has been watched
-					if debug {
-						fmt.Println("this file has being watched, pass", in.GetFullPath())
-					}
-					return
-				}
-				defer ff.record.Delete(in.GetFullPath())
-				oldTime := timeInter.(time.Time)
-				for ; ; {
-					newSize := GetFileSize(in.GetFullPath())
+				for {
+					newSize := GetFileSize(fp)
 					if newSize == oldSize && time.Now().Sub(oldTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
-								fmt.Println("stable file", in.GetFullPath())
+								fmt.Println("stable file", fp)
 							}
-							ff.oS <- NewOutFileInfo(in.GetFullPath(), newSize)
+							ff.oS <- NewOutFileInfo(fp, newSize)
 						}
 						return
 					} else {
 						if newSize != oldSize {
+							if ff.oC != nil {
+								if debug {
+									fmt.Println("file size changed", fp)
+								}
+								ff.oC <- NewOutFileInfo(fp, newSize)
+							}
 							// refresh
 							oldTime = time.Now()
 							oldSize = newSize
-							if ff.oC != nil {
-								if debug {
-									fmt.Println("file size changed", in.GetFullPath())
-								}
-								ff.oC <- NewOutFileInfo(in.GetFullPath(), newSize)
-							}
 						}
 					}
 					time.Sleep(ff.loopTime)
 				}
-			}()
+			}(in.GetFullPath(), timeInter.(time.Time))
 
 		case _, ok := <-ff.stopChan:
 			if !ok {
