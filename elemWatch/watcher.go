@@ -68,7 +68,7 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 			if debug {
 				fmt.Println("input an elem", in.GetToken())
 			}
-			_, has := ff.record.LoadOrStore(in.GetToken(), time.Now())
+			preTimeInter, has := ff.record.LoadOrStore(in.GetToken(), time.Now())
 			if has { // this file has been watched
 				if debug {
 					fmt.Println("this elem has being watched, pass", in.GetToken())
@@ -80,15 +80,12 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 				defer ff.wg.Done()
 				defer ff.record.Delete(token)
 				preVersion := changeFunc(token)
-				preTimeInter, ok := ff.record.Load(in.GetToken())
-				if !ok {
-					return
-				}
 				preTime := preTimeInter.(time.Time)
 				for {
 					newVersion := changeFunc(token)
+					newTime := time.Now()
 
-					if newVersion == preVersion && time.Now().Sub(preTime) >= ff.tolerateTime {
+					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
 								fmt.Println("stable elem", token)
@@ -106,7 +103,7 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 						}
 						// refresh
 						preVersion = newVersion
-						preTime = time.Now()
+						preTime = newTime
 					}
 					time.Sleep(ff.loopTime)
 				}
