@@ -17,7 +17,7 @@ type FilterConfig struct {
 	LoopTime, TolerateTime time.Duration
 }
 
-type elemFilter struct {
+type ElemFilter struct {
 	loopTime     time.Duration // 每个文件的扫描时间
 	tolerateTime time.Duration //
 	record       sync.Map
@@ -27,8 +27,8 @@ type elemFilter struct {
 	wg           *sync.WaitGroup
 }
 
-func NewFileWatcher(eConfig FilterConfig) *elemFilter {
-	return &elemFilter{
+func NewFileWatcher(eConfig FilterConfig) *ElemFilter {
+	return &ElemFilter{
 		loopTime:     eConfig.LoopTime,
 		tolerateTime: eConfig.TolerateTime,
 		record:       sync.Map{},
@@ -54,7 +54,7 @@ func GetFileSize(fp string) int64 {
 }
 
 // changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
-func (ff *elemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc func(token string) int64) {
+func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc func(token string) int64) {
 	if debug {
 		fmt.Println("watcher running")
 	}
@@ -124,7 +124,7 @@ func (ff *elemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc
 	}
 }
 
-func (ff *elemFilter) Stop() {
+func (ff *ElemFilter) Stop() {
 	close(ff.stopChan)
 	ff.wg.Wait()
 }
