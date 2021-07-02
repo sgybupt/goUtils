@@ -1,7 +1,7 @@
 package elemwatch
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -56,7 +56,7 @@ func GetFileSize(fp string) int64 {
 // changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
 func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFunc func(token string) int64) {
 	if debug {
-		fmt.Println("watcher running")
+		log.Println("watcher running")
 	}
 
 	ff.i = i
@@ -70,12 +70,12 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 				return
 			}
 			if debug {
-				fmt.Println("an elem", in.GetToken())
+				log.Println("an elem", in.GetToken())
 			}
 			_, has := ff.record.LoadOrStore(in.GetToken(), in)
 			if has { // this file has been watched
 				if debug {
-					fmt.Println("under watched, pass", in.GetToken())
+					log.Println("under watched, pass", in.GetToken())
 				}
 				ff.record.Store(in.GetToken(), in) // 刷新elem的信息, token是一样的
 				continue
@@ -93,7 +93,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
-								fmt.Println("stable", token)
+								log.Println("stable", token)
 							}
 							ff.oS <- inElem
 						}
@@ -102,13 +102,16 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					if newVersion != preVersion {
 						if ff.oC != nil {
 							if debug {
-								fmt.Println("changed", token)
+								log.Println("changed", token)
 							}
 							ff.oC <- inElem
 						}
 						// refresh
 						preVersion = newVersion
 						preTime = newTime
+					}
+					if debug {
+						log.Println("sleep", ff.loopTime)
 					}
 					time.Sleep(ff.loopTime)
 				}
@@ -117,7 +120,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 		case _, ok := <-ff.stopChan:
 			if !ok {
 				if debug {
-					fmt.Println("watcher is stopping")
+					log.Println("watcher is stopping")
 				}
 				return
 			}
