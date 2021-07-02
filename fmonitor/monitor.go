@@ -149,13 +149,18 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				if !ok {
 					return
 				}
-				if _, ok := statusMap[event.Name]; ok {
-					statusMap[event.Name].SetT(time.Now())
-				} else {
-					statusMap[event.Name] = &EventWithTimestamp{
-						Event: event,
-						T:     time.Now(),
-					}
+				//if _, ok := statusMap[event.Name]; ok {
+				//	statusMap[event.Name].SetT(time.Now())
+				//} else {
+				//	statusMap[event.Name] = &EventWithTimestamp{
+				//		Event: event,
+				//		T:     time.Now(),
+				//	}
+				//}
+
+				statusMap[event.Name] = &EventWithTimestamp{
+					Event: event,
+					T:     time.Now(),
 				}
 
 				if event.Op&fsnotify.Create == fsnotify.Create {
@@ -187,6 +192,7 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 			case <-tick.C:
 				for k, v := range statusMap {
 					if time.Now().Sub(v.T) >= m.config.ToleranceTime {
+						fmt.Println("[Info]: 过期", v.Name, v.Op.String())
 						msgChan <- v
 						delete(statusMap, k)
 					}
