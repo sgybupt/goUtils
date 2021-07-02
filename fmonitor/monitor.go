@@ -201,6 +201,7 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				if !ok {
 					return
 				}
+				fmt.Println("watcher fatal", err)
 				log.Fatal(err)
 
 			case _, _ = <-m.closeChan:
