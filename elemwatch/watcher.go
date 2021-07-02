@@ -116,9 +116,6 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 						preVersion = newVersion
 						preTime = newTime
 					}
-					if debug {
-						log.Println("sleep", ff.loopTime)
-					}
 					time.Sleep(ff.loopTime)
 				}
 			}(in.GetToken())
