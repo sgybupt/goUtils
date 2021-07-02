@@ -81,7 +81,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 				continue
 			}
 			ff.wg.Add(1)
-			go func(token string, inElem ElemInter) {
+			go func(token string) {
 				defer ff.wg.Done()
 				defer ff.record.Delete(token)
 				preVersion := changeFunc(token)
@@ -95,7 +95,10 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 							if debug {
 								log.Println("stable", token)
 							}
-							ff.oS <- inElem
+							inElem, ok := ff.record.Load(token)
+							if ok {
+								ff.oS <- inElem.(ElemInter)
+							}
 						}
 						return
 					}
@@ -104,7 +107,10 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 							if debug {
 								log.Println("changed", token)
 							}
-							ff.oC <- inElem
+							inElem, ok := ff.record.Load(token)
+							if ok {
+								ff.oC <- inElem.(ElemInter)
+							}
 						}
 						// refresh
 						preVersion = newVersion
@@ -115,7 +121,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					}
 					time.Sleep(ff.loopTime)
 				}
-			}(in.GetToken(), in)
+			}(in.GetToken())
 
 		case _, ok := <-ff.stopChan:
 			if !ok {
