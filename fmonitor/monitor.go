@@ -105,7 +105,8 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 		for _, fi := range files {
 			if fi.IsDir() { // 目录, 递归遍历
 				subPath := s + pathSep + fi.Name()
-
+				//fmt.Println(subPath)
+				//fmt.Println(m.config.DirLevel, dirDepthCount)
 				if m.config.DirLevel < 0 || dirDepthCount < m.config.DirLevel {
 					dirDepthCount++
 					err = watcher.Add(subPath)
@@ -125,13 +126,13 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 		return nil
 	}
 
-	fmt.Println(m.watchDirs)
-
 	err = dirDFS(m.config.AimDir)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	fmt.Println(m.watchDirs)
 
 	m.wg.Add(1)
 
