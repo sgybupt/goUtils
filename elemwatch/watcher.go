@@ -22,7 +22,7 @@ type ElemFilter struct {
 	tolerateTime time.Duration //
 	record       sync.Map
 	i            <-chan ElemInter
-	oS, oC       chan<- ElemInfo
+	oS, oC       chan<- ElemInter
 	stopChan     chan bool
 	wg           *sync.WaitGroup
 }
