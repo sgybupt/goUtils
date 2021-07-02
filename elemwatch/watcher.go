@@ -21,8 +21,8 @@ type elemFilter struct {
 	loopTime     time.Duration // 每个文件的扫描时间
 	tolerateTime time.Duration //
 	record       sync.Map
-	i            <-chan InFileInfoInter
-	oS, oC       chan<- OutFileInfoInter
+	i            <-chan ElemInter
+	oS, oC       chan<- ElemInfo
 	stopChan     chan bool
 	wg           *sync.WaitGroup
 }
@@ -54,7 +54,7 @@ func GetFileSize(fp string) int64 {
 }
 
 // changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
-func (ff *elemFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInter, changeFunc func(token string) int64) {
+func (ff *elemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc func(token string) int64) {
 	if debug {
 		fmt.Println("watcher running")
 	}
@@ -94,7 +94,7 @@ func (ff *elemFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 							if debug {
 								fmt.Println("stable elem", token)
 							}
-							ff.oS <- NewOutElemInfo(token, newVersion)
+							ff.oS <- NewElemInfo(token)
 						}
 						return
 					}
@@ -103,7 +103,7 @@ func (ff *elemFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 							if debug {
 								fmt.Println("elem changed", token)
 							}
-							ff.oC <- NewOutElemInfo(token, newVersion)
+							ff.oC <- NewElemInfo(token)
 						}
 						// refresh
 						preVersion = newVersion

@@ -1,12 +1,7 @@
 package elemwatch
 
-type InFileInfoInter interface {
+type ElemInter interface {
 	GetToken() string
-}
-
-type OutFileInfoInter interface {
-	InFileInfoInter
-	GetChange() interface{}
 }
 
 type ElemInfo struct {
@@ -19,26 +14,6 @@ func NewElemInfo(p string) ElemInfo {
 	}
 }
 
-func NewOutElemInfo(p string, s interface{}) OutElemInfo {
-	return OutElemInfo{
-		path:        p,
-		changeInter: s,
-	}
-}
-
 func (f ElemInfo) GetToken() string {
 	return f.token
-}
-
-type OutElemInfo struct {
-	path        string
-	changeInter interface{}
-}
-
-func (f OutElemInfo) GetToken() string {
-	return f.path
-}
-
-func (f OutElemInfo) GetChange() interface{} {
-	return f.changeInter
 }
