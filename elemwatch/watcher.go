@@ -70,12 +70,12 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 				return
 			}
 			if debug {
-				fmt.Println("input an elem", in.GetToken())
+				fmt.Println("an elem", in.GetToken())
 			}
 			preTimeInter, has := ff.record.LoadOrStore(in.GetToken(), time.Now())
 			if has { // this file has been watched
 				if debug {
-					fmt.Println("this elem has being watched, pass", in.GetToken())
+					fmt.Println("under watched, pass", in.GetToken())
 				}
 				continue
 			}
@@ -92,7 +92,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
-								fmt.Println("stable elem", token)
+								fmt.Println("stable", token)
 							}
 							ff.oS <- NewElemInfo(token)
 						}
@@ -101,7 +101,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					if newVersion != preVersion {
 						if ff.oC != nil {
 							if debug {
-								fmt.Println("elem changed", token)
+								fmt.Println("changed", token)
 							}
 							ff.oC <- NewElemInfo(token)
 						}
