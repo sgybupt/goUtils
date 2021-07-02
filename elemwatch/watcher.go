@@ -54,7 +54,7 @@ func GetFileSize(fp string) int64 {
 }
 
 // changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
-func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc func(token string) int64) {
+func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFunc func(token string) int64) {
 	if debug {
 		fmt.Println("watcher running")
 	}
