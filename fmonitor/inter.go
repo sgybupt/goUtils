@@ -1,4 +1,4 @@
-package fileMonitor
+package fmonitor
 
 import (
 	"github.com/fsnotify/fsnotify"

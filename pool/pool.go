@@ -1,4 +1,4 @@
-package goPool
+package pool
 
 import (
 	"errors"

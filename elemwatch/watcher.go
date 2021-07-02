@@ -1,4 +1,4 @@
-package elemWatch
+package elemwatch
 
 import (
 	"fmt"

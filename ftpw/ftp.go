@@ -1,4 +1,4 @@
-package ftpWapper
+package ftpw
 
 import (
 	"fmt"

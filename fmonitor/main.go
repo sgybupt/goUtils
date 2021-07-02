@@ -1,4 +1,4 @@
-package fileMonitor
+package fmonitor
 
 /*
 使用 fsnotify 作为后端. 开源可商用
