@@ -72,27 +72,28 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 			if debug {
 				fmt.Println("an elem", in.GetToken())
 			}
-			preTimeInter, has := ff.record.LoadOrStore(in.GetToken(), time.Now())
+			_, has := ff.record.LoadOrStore(in.GetToken(), in)
 			if has { // this file has been watched
 				if debug {
 					fmt.Println("under watched, pass", in.GetToken())
 				}
+				ff.record.Store(in.GetToken(), in) // 刷新elem的信息, token是一样的
 				continue
 			}
 			ff.wg.Add(1)
-			go func(inElem ElemInter) {
+			go func(token string, inElem ElemInter) {
 				defer ff.wg.Done()
-				defer ff.record.Delete(inElem.GetToken())
-				preVersion := changeFunc(inElem.GetToken())
-				preTime := preTimeInter.(time.Time)
+				defer ff.record.Delete(token)
+				preVersion := changeFunc(token)
+				preTime := time.Now()
 				for {
-					newVersion := changeFunc(inElem.GetToken())
+					newVersion := changeFunc(token)
 					newTime := time.Now()
 
 					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
 							if debug {
-								fmt.Println("stable", inElem.GetToken())
+								fmt.Println("stable", token)
 							}
 							ff.oS <- inElem
 						}
@@ -101,7 +102,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					if newVersion != preVersion {
 						if ff.oC != nil {
 							if debug {
-								fmt.Println("changed", inElem.GetToken())
+								fmt.Println("changed", token)
 							}
 							ff.oC <- inElem
 						}
@@ -111,7 +112,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					}
 					time.Sleep(ff.loopTime)
 				}
-			}(in)
+			}(in.GetToken(), in)
 
 		case _, ok := <-ff.stopChan:
 			if !ok {
