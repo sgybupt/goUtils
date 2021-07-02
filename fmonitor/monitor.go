@@ -85,6 +85,7 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 
 	err = watcher.Add(m.config.AimDir)
 	if err != nil {
+		fmt.Println("add dir fatal", err)
 		log.Fatal(err)
 		return
 	}
@@ -111,12 +112,12 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 					dirDepthCount++
 					err = watcher.Add(subPath)
 					if err != nil {
-						log.Fatal(err)
+						return err
 					}
 					m.watchDirs[subPath] = true
 					err = dirDFS(subPath)
 					if err != nil {
-						log.Fatal(err)
+						return err
 					}
 					dirDepthCount--
 				}
@@ -128,6 +129,7 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 
 	err = dirDFS(m.config.AimDir)
 	if err != nil {
+		fmt.Println("add dir fatal", err)
 		log.Fatal(err)
 		return
 	}
