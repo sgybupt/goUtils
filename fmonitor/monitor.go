@@ -140,9 +140,9 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 
 	go func() {
 		defer m.wg.Done()
-		statusMap := make(map[string]*EventWithTimestamp)
-		tick := time.NewTicker(m.config.TickTime)
-		defer tick.Stop()
+		//statusMap := make(map[string]*EventWithTimestamp)
+		//tick := time.NewTicker(m.config.TickTime)
+		//defer tick.Stop()
 		for {
 			select {
 			case event, ok := <-watcher.Events:
@@ -158,7 +158,7 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				//	}
 				//}
 
-				statusMap[event.Name] = &EventWithTimestamp{
+				msgChan <- &EventWithTimestamp{
 					Event: event,
 					T:     time.Now(),
 				}
@@ -189,14 +189,14 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				if event.Op&fsnotify.Chmod == fsnotify.Chmod {
 				}
 
-			case <-tick.C:
-				for k, v := range statusMap {
-					if time.Now().Sub(v.T) >= m.config.ToleranceTime {
-						fmt.Println("[Info]: 过期", v.Name, v.Op.String())
-						msgChan <- v
-						delete(statusMap, k)
-					}
-				}
+			//case <-tick.C:
+			//	for k, v := range statusMap {
+			//		if time.Now().Sub(v.T) >= m.config.ToleranceTime {
+			//			fmt.Println("[Info]: 过期", v.Name, v.Op.String())
+			//			msgChan <- v
+			//			delete(statusMap, k)
+			//		}
+			//	}
 
 			case err, ok := <-watcher.Errors:
 				if !ok {
