@@ -54,6 +54,10 @@ func newFTPConn(addr string, timeout time.Duration) {
 			if err = ftpConn.Login(config.Username, config.Password); err != nil {
 				log.Fatal("username and password is incorrect")
 			}
+			if err = ftpConn.ChangeDir(config.FTPDir); err != nil {
+				p := path.Clean(config.FTPDir)
+				log.Fatal("change dir failed", p)
+			}
 			break
 		}
 	}
