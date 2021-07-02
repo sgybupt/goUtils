@@ -8,7 +8,7 @@ type ElemInfo struct {
 	token string
 }
 
-func NewElemInfo(p string) ElemInfo {
+func newElemInfo(p string) ElemInfo {
 	return ElemInfo{
 		token: p,
 	}

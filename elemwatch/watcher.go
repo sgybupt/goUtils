@@ -94,7 +94,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc
 							if debug {
 								fmt.Println("stable elem", token)
 							}
-							ff.oS <- NewElemInfo(token)
+							ff.oS <- newElemInfo(token)
 						}
 						return
 					}
@@ -103,7 +103,7 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInfo, changeFunc
 							if debug {
 								fmt.Println("elem changed", token)
 							}
-							ff.oC <- NewElemInfo(token)
+							ff.oC <- newElemInfo(token)
 						}
 						// refresh
 						preVersion = newVersion
