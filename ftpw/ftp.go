@@ -137,8 +137,8 @@ func MakeDirsP(dir string) error {
 	dfs = func(d string) {
 		d = path.Clean(d)
 		_d, _p := path.Split(d)
+		dirs = append(dirs, _p)
 		if _d != "" && _d != string(os.PathSeparator) {
-			dirs = append(dirs, _p)
 			dfs(_d)
 		}
 	}
