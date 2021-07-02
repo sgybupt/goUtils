@@ -64,7 +64,7 @@ func (m *Monitor) Stop() {
 	atomic.StoreInt64(&m.isRunning, 0)
 }
 
-func (m *Monitor) Run(msgChan chan<- EventInter) {
+func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 	if !atomic.CompareAndSwapInt64(&m.isRunning, 0, 1) {
 		return
 	}
@@ -137,7 +137,7 @@ func (m *Monitor) Run(msgChan chan<- EventInter) {
 
 	go func() {
 		defer m.wg.Done()
-		statusMap := make(map[string]EventInter)
+		statusMap := make(map[string]*EventWithTimestamp)
 		tick := time.NewTicker(m.config.TickTime)
 		defer tick.Stop()
 		for {
@@ -173,7 +173,7 @@ func (m *Monitor) Run(msgChan chan<- EventInter) {
 				}
 
 				if ev, ok := statusMap[event.Name]; ok {
-					if time.Now().Sub(ev.GetT()) >= m.config.ToleranceTime {
+					if time.Now().Sub(ev.T) >= m.config.ToleranceTime {
 						msgChan <- ev
 						delete(statusMap, event.Name)
 					} else {
@@ -188,7 +188,7 @@ func (m *Monitor) Run(msgChan chan<- EventInter) {
 
 			case <-tick.C:
 				for k, v := range statusMap {
-					if time.Now().Sub(v.GetT()) >= m.config.ToleranceTime {
+					if time.Now().Sub(v.T) >= m.config.ToleranceTime {
 						msgChan <- v
 						delete(statusMap, k)
 					}

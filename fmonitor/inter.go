@@ -14,28 +14,9 @@ type Config struct {
 	DirLevel int
 }
 
-type EventInter interface {
-	GetName() string
-	GetOp() uint32
-	GetT() time.Time
-	SetT(time.Time)
-}
-
 type EventWithTimestamp struct {
 	fsnotify.Event
 	T time.Time
-}
-
-func (ewt EventWithTimestamp) GetName() string {
-	return ewt.Name
-}
-
-func (ewt EventWithTimestamp) GetOp() uint32 {
-	return uint32(ewt.Op)
-}
-
-func (ewt EventWithTimestamp) GetT() time.Time {
-	return ewt.T
 }
 
 func (ewt *EventWithTimestamp) SetT(t time.Time) {
