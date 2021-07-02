@@ -5,15 +5,15 @@ type ElemInter interface {
 }
 
 type ElemInfo struct {
-	token string
+	Token string
 }
 
 func NewElemInfo(p string) ElemInfo {
 	return ElemInfo{
-		token: p,
+		Token: p,
 	}
 }
 
 func (f ElemInfo) GetToken() string {
-	return f.token
+	return f.Token
 }
