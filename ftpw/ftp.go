@@ -10,19 +10,22 @@ import (
 	"time"
 )
 
-var (
-	Addr     string
-	Timeout  time.Duration
-	Username string
-	Password string
-)
+var config Config
+
+type Config struct {
+	Addr               string
+	Timeout            time.Duration
+	Username, Password string
+	FTPDir             string
+}
 
 var ftpConn *ftp.ServerConn
-var reconOnceFlag int64
-var reconBoardcastChan chan bool
 
 func init() {
-	reconBoardcastChan = make(chan bool)
+}
+
+func SetConfig(c Config) {
+	config = c
 }
 
 func newFTPConn(addr string, timeout time.Duration) {
@@ -38,8 +41,8 @@ func newFTPConn(addr string, timeout time.Duration) {
 
 	// ftpConn == nil  need to re connect
 	var c *ftp.ServerConn
-	Addr = addr
-	Timeout = timeout
+	config.Addr = addr
+	config.Timeout = timeout
 
 	maxTime := 3
 	for ; maxTime > 0; maxTime-- {
@@ -48,7 +51,7 @@ func newFTPConn(addr string, timeout time.Duration) {
 			_ = fmt.Errorf("connect to server %s error: %s", addr, err.Error())
 		} else {
 			ftpConn = c
-			if err = ftpConn.Login(Username, Password); err != nil {
+			if err = ftpConn.Login(config.Username, config.Password); err != nil {
 				log.Fatal("username and password is incorrect")
 			}
 			break
@@ -70,7 +73,7 @@ func GetFTPConn() (c *ftp.ServerConn) {
 	fastFixer.Do(bad,
 		func() {
 		}, func() {
-			newFTPConn(Addr, Timeout)
+			newFTPConn(config.Addr, config.Timeout)
 		})
 	return ftpConn
 }

@@ -13,7 +13,11 @@ func SetDebug(d bool) {
 	debug = d
 }
 
-type FileFilter struct {
+type FilterConfig struct {
+	LoopTime, TolerateTime time.Duration
+}
+
+type elemFilter struct {
 	loopTime     time.Duration // 每个文件的扫描时间
 	tolerateTime time.Duration //
 	record       sync.Map
@@ -23,10 +27,10 @@ type FileFilter struct {
 	wg           *sync.WaitGroup
 }
 
-func NewFileWatcher(loopTime, tolerateTIme time.Duration) *FileFilter {
-	return &FileFilter{
-		loopTime:     loopTime,
-		tolerateTime: tolerateTIme,
+func NewFileWatcher(eConfig FilterConfig) *elemFilter {
+	return &elemFilter{
+		loopTime:     eConfig.LoopTime,
+		tolerateTime: eConfig.TolerateTime,
 		record:       sync.Map{},
 		stopChan:     make(chan bool),
 		wg:           new(sync.WaitGroup),
@@ -50,7 +54,7 @@ func GetFileSize(fp string) int64 {
 }
 
 // changeFunc 用token算出一个版本号 若版本未推进, 则认为stable
-func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInter, changeFunc func(token string) int64) {
+func (ff *elemFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInter, changeFunc func(token string) int64) {
 	if debug {
 		fmt.Println("watcher running")
 	}
@@ -120,7 +124,7 @@ func (ff *FileFilter) Run(i <-chan InFileInfoInter, oS, oC chan<- OutFileInfoInt
 	}
 }
 
-func (ff *FileFilter) Stop() {
+func (ff *elemFilter) Stop() {
 	close(ff.stopChan)
 	ff.wg.Wait()
 }
