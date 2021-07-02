@@ -149,6 +149,15 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				if !ok {
 					return
 				}
+				if _, ok := statusMap[event.Name]; ok {
+					statusMap[event.Name].SetT(time.Now())
+				} else {
+					statusMap[event.Name] = &EventWithTimestamp{
+						Event: event,
+						T:     time.Now(),
+					}
+				}
+
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if isDir(event.Name) {
 						err = watcher.Add(event.Name)
@@ -173,20 +182,6 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 				}
 
 				if event.Op&fsnotify.Chmod == fsnotify.Chmod {
-				}
-
-				if ev, ok := statusMap[event.Name]; ok {
-					if time.Now().Sub(ev.T) >= m.config.ToleranceTime {
-						msgChan <- ev
-						delete(statusMap, event.Name)
-					} else {
-						statusMap[event.Name].SetT(time.Now())
-					}
-				} else {
-					statusMap[event.Name] = &EventWithTimestamp{
-						Event: event,
-						T:     time.Now(),
-					}
 				}
 
 			case <-tick.C:
