@@ -21,12 +21,18 @@ var FatalLog *log.Logger
 
 const DEBUG = true
 
-func LogInit(logConfig LogConfig) {
-	f, err := os.Open(logConfig.LogPath)
+type LogConfig struct {
+	LogPath string
+}
+
+func (l *LogConfig) InitConfig(config LogConfig) {
+	l.LogPath = config.LogPath
+
+	f, err := os.Open(config.LogPath)
 	if err != nil {
 		if err == os.ErrNotExist {
 			//err = nil
-			err = os.MkdirAll(logConfig.LogPath, 0666)
+			err = os.MkdirAll(config.LogPath, 0666)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -42,12 +48,15 @@ func LogInit(logConfig LogConfig) {
 	if !fInfo.IsDir() {
 		log.Fatalln("[Error]: ", errors.New("log path is not a dir"))
 	}
-
 	InfoLog = log.New(io.MultiWriter(nil, os.Stdout), "", log.Ldate|log.Ltime|log.Lshortfile)
 	WarningLog = log.New(io.MultiWriter(nil, os.Stdout), "", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLog = log.New(io.MultiWriter(nil, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 	FatalLog = log.New(io.MultiWriter(nil, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 	return
+}
+
+func (l *LogConfig) SetLogPath(p string) {
+	l.LogPath = p
 }
 
 func LogStart() {
