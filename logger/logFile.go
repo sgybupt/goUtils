@@ -18,7 +18,7 @@ var ErrorLog *log.Logger
 var WarningLog *log.Logger
 var FatalLog *log.Logger
 
-const DEBUG = false
+var DEBUG = false
 
 type LogConfig struct {
 	LogPath string
@@ -84,8 +84,8 @@ func LogStart(config LogConfig) {
 				ErrorLog = log.New(io.MultiWriter(outFileNew, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 				FatalLog = log.New(io.MultiWriter(outFileNew, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 			} else {
-				InfoLog = log.New(io.MultiWriter(outFileNew, nil), "", log.Ldate|log.Ltime|log.Lshortfile)
-				WarningLog = log.New(io.MultiWriter(outFileNew, nil), "", log.Ldate|log.Ltime|log.Lshortfile)
+				InfoLog = log.New(io.MultiWriter(outFileNew), "", log.Ldate|log.Ltime|log.Lshortfile)
+				WarningLog = log.New(io.MultiWriter(outFileNew), "", log.Ldate|log.Ltime|log.Lshortfile)
 				ErrorLog = log.New(io.MultiWriter(outFileNew, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 				FatalLog = log.New(io.MultiWriter(outFileNew, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
 			}
