@@ -136,80 +136,63 @@ func (m *Monitor) Run(msgChan chan<- *EventWithTimestamp) {
 
 	fmt.Println(m.watchDirs)
 
-	m.wg.Add(1)
-
-	go func() {
-		defer m.wg.Done()
-		//statusMap := make(map[string]*EventWithTimestamp)
-		//tick := time.NewTicker(m.config.TickTime)
-		//defer tick.Stop()
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				//if _, ok := statusMap[event.Name]; ok {
-				//	statusMap[event.Name].SetT(time.Now())
-				//} else {
-				//	statusMap[event.Name] = &EventWithTimestamp{
-				//		Event: event,
-				//		T:     time.Now(),
-				//	}
-				//}
-
-				msgChan <- &EventWithTimestamp{
-					Event: event,
-					T:     time.Now(),
-				}
-
-				if event.Op&fsnotify.Create == fsnotify.Create {
-					if isDir(event.Name) {
-						err = watcher.Add(event.Name)
-						if err != nil {
-							log.Println(err)
-							return
-						}
-						m.watchDirs[event.Name] = true
-					}
-				}
-
-				if event.Op&fsnotify.Write == fsnotify.Write {
-				}
-
-				if event.Op&fsnotify.Remove == fsnotify.Remove {
-					if m.watchDirs[event.Name] {
-						delete(m.watchDirs, event.Name)
-						// here error happens because this file has been removed.
-						// but it doesn't matter.
-						_ = watcher.Remove(event.Name)
-					}
-				}
-
-				if event.Op&fsnotify.Chmod == fsnotify.Chmod {
-				}
-
-			//case <-tick.C:
-			//	for k, v := range statusMap {
-			//		if time.Now().Sub(v.T) >= m.config.ToleranceTime {
-			//			fmt.Println("[Info]: 过期", v.Name, v.Op.String())
-			//			msgChan <- v
-			//			delete(statusMap, k)
-			//		}
-			//	}
-
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("[Warning]: watcher err", err)
-
-			case _, _ = <-m.closeChan:
+	//statusMap := make(map[string]*EventWithTimestamp)
+	//tick := time.NewTicker(m.config.TickTime)
+	//defer tick.Stop()
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
 				return
 			}
+			//if _, ok := statusMap[event.Name]; ok {
+			//	statusMap[event.Name].SetT(time.Now())
+			//} else {
+			//	statusMap[event.Name] = &EventWithTimestamp{
+			//		Event: event,
+			//		T:     time.Now(),
+			//	}
+			//}
+
+			msgChan <- &EventWithTimestamp{
+				Event: event,
+				T:     time.Now(),
+			}
+
+			if event.Op&fsnotify.Create == fsnotify.Create {
+				if isDir(event.Name) {
+					err = watcher.Add(event.Name)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					m.watchDirs[event.Name] = true
+				}
+			}
+
+			if event.Op&fsnotify.Write == fsnotify.Write {
+			}
+
+			if event.Op&fsnotify.Remove == fsnotify.Remove {
+				if m.watchDirs[event.Name] {
+					delete(m.watchDirs, event.Name)
+					// here error happens because this file has been removed.
+					// but it doesn't matter.
+					_ = watcher.Remove(event.Name)
+				}
+			}
+
+			if event.Op&fsnotify.Chmod == fsnotify.Chmod {
+			}
+
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Println("[Warning]: watcher err", err)
+
+		case _, _ = <-m.closeChan:
+			return
 		}
-
-	}()
-
-	m.wg.Wait()
+	}
 }
