@@ -1,6 +1,7 @@
 package elemwatch
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -86,9 +87,20 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 				defer ff.record.Delete(token)
 				var preVersion int64
 				var preTime time.Time
+
+				if debug {
+					defer func() {
+						fmt.Println(fmt.Sprintf("token %s 退出", token))
+					}()
+				}
+
 				for {
 					newVersion := changeFunc(token)
 					newTime := time.Now()
+					if debug {
+						fmt.Println(fmt.Sprintf("原始版本: %d, 原始时间: %s", preVersion, preTime))
+						fmt.Println(fmt.Sprintf("最新版本: %d, 最新时间: %s", newVersion, newTime))
+					}
 
 					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
 						if ff.oS != nil {
