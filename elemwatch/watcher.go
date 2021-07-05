@@ -3,6 +3,7 @@ package elemwatch
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"sync"
 	"time"
@@ -85,18 +86,19 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 			go func(token string) {
 				defer ff.wg.Done()
 				defer ff.record.Delete(token)
-				var preVersion int64
-				var preTime time.Time
 
 				if debug {
 					defer func() {
 						fmt.Println(fmt.Sprintf("token %s 退出", token))
 					}()
 				}
-
+				var preVersion int64 = math.MinInt64
+				var preTime = time.Now()
 				for {
+					time.Sleep(ff.loopTime)
 					newVersion := changeFunc(token)
 					newTime := time.Now()
+
 					if debug {
 						fmt.Println(fmt.Sprintf("原始版本: %d, 原始时间: %s", preVersion, preTime))
 						fmt.Println(fmt.Sprintf("最新版本: %d, 最新时间: %s", newVersion, newTime))
@@ -124,11 +126,11 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 								ff.oC <- inElem.(ElemInter)
 							}
 						}
-						// refresh
-						preVersion = newVersion
+						// refresh time when version is changed
 						preTime = newTime
 					}
-					time.Sleep(ff.loopTime)
+					// refresh version every time
+					preVersion = newVersion
 				}
 			}(in.GetToken())
 
