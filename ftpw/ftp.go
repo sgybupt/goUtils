@@ -165,5 +165,6 @@ func UploadFile(localFp string, aimPath string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	return GetFTPConn().Stor(aimPath, file)
 }
