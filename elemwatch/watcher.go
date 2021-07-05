@@ -84,8 +84,8 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 			go func(token string) {
 				defer ff.wg.Done()
 				defer ff.record.Delete(token)
-				preVersion := changeFunc(token)
-				preTime := time.Now()
+				var preVersion int64
+				var preTime time.Time
 				for {
 					newVersion := changeFunc(token)
 					newTime := time.Now()
