@@ -42,9 +42,7 @@ func LogInit(logConfig LogConfig) {
 	if !fInfo.IsDir() {
 		log.Fatalln("[Error]: ", errors.New("log path is not a dir"))
 	}
-	L.InitConfig(LogConfig{
-		LogPath: logConfig.LogPath,
-	})
+
 	InfoLog = log.New(io.MultiWriter(nil, os.Stdout), "", log.Ldate|log.Ltime|log.Lshortfile)
 	WarningLog = log.New(io.MultiWriter(nil, os.Stdout), "", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLog = log.New(io.MultiWriter(nil, os.Stderr), "", log.Ldate|log.Ltime|log.Lshortfile)
