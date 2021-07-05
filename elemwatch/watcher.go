@@ -76,9 +76,6 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 			}
 			_, has := ff.record.LoadOrStore(in.GetToken(), in)
 			if has { // this file has been watched
-				if debug {
-					log.Println("under watched, pass", in.GetToken())
-				}
 				ff.record.Store(in.GetToken(), in) // 刷新elem的信息, token是一样的
 				continue
 			}
@@ -99,9 +96,19 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 					newVersion := changeFunc(token)
 					newTime := time.Now()
 
-					if debug {
-						fmt.Println(fmt.Sprintf("原始版本: %d, 原始时间: %s", preVersion, preTime))
-						fmt.Println(fmt.Sprintf("最新版本: %d, 最新时间: %s", newVersion, newTime))
+					if newVersion != preVersion {
+						if debug {
+							log.Println(fmt.Sprintf("%s 版本更替: %d -> %d", token, preVersion, newVersion))
+						}
+						if ff.oC != nil {
+							inElem, ok := ff.record.Load(token)
+							if ok {
+								ff.oC <- inElem.(ElemInter)
+							}
+						}
+						preTime = newTime
+						preVersion = newVersion
+						continue
 					}
 
 					if newVersion == preVersion && newTime.Sub(preTime) >= ff.tolerateTime {
@@ -116,21 +123,6 @@ func (ff *ElemFilter) Run(i <-chan ElemInter, oS, oC chan<- ElemInter, changeFun
 						}
 						return
 					}
-					if newVersion != preVersion {
-						if ff.oC != nil {
-							if debug {
-								log.Println("changed", token)
-							}
-							inElem, ok := ff.record.Load(token)
-							if ok {
-								ff.oC <- inElem.(ElemInter)
-							}
-						}
-						// refresh time when version is changed
-						preTime = newTime
-					}
-					// refresh version every time
-					preVersion = newVersion
 				}
 			}(in.GetToken())
 
